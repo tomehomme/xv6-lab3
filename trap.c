@@ -50,23 +50,18 @@ trap(struct trapframe *tf)
   }
 
   switch(tf->trapno){
-    // add case for the page fault
-
-//     //Allocate the next page, store new size in sz. Starts at page round down of the current page, ends at the start addres plus PGSIZE
-//     myproc()->sz = allocuvm(myproc()->pgdir, PGROUNDDOWN((uint)rcr2())+PGSIZE, PGROUNDDOWN((uint)(rcr2())-1));
-//     myproc()->pages++;
-//     break;
-
-   
+    
+   // creating trap for growing the stack.
     case T_PGFLT:
       // if trap address is below the next page, dont allocate it.
       if(PGROUNDDOWN(rcr2() < KERNBASE - 1 - PGSIZE*(myproc()->pages))){ break;}
         // we will call allocuvm and make a new one. same format as in exec.c
         // new stack will be below the current one in the process
-        if(allocuvm(myproc()->pgdir, PGROUNDDOWN((uint)rcr2() - PGSIZE), rcr2()-1)==0){        // same as go to bad
+        // we will round down to the lower page, and make it grow to page we are at rn
+        if(allocuvm(myproc()->pgdir, PGROUNDDOWN((uint)rcr2()), rcr2())==0){        // same as go to bad
         cprintf("case T_PGFLT from trap.c: allocuvm failed. Number of current allocated pages: %d\n", myproc()->pages);
         exit();
-      }
+       }
         // tell process we increased its pages
         myproc()->pages++;
         cprintf("case T_PGFLT from trap.c: allocuvm succeeded. Number of pages allocated: %d\n", myproc()->pages);
